@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MegaStore Global — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --border: #1f2330;
+    --border-soft: #252a38;
+    --accent: #4fffb0;
+    --accent-dim: rgba(79,255,176,.12);
+    --accent-red: #ff5f6d;
+    --accent-amber: #ffb340;
+    --text: #e2e6f0;
+    --muted: #5a6177;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{height:100%}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:var(--sans);font-size:14px;
+    min-height:100vh;display:flex;flex-direction:column;
+  }
+
+  /* ── HEADER ── */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 28px;height:56px;
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+    position:sticky;top:0;z-index:100;
+  }
+  .logo{
+    font-family:var(--mono);font-size:13px;font-weight:500;
+    color:var(--accent);letter-spacing:.08em;
+  }
+  .logo span{color:var(--muted)}
+  .status-dot{
+    width:7px;height:7px;border-radius:50%;background:#3a3f52;
+    display:inline-block;margin-right:8px;transition:.3s;
+  }
+  .status-dot.online{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+  #status-label{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+  /* ── LAYOUT ── */
+  .shell{display:flex;flex:1;overflow:hidden}
+  nav{
+    width:196px;min-width:196px;
+    border-right:1px solid var(--border);
+    background:var(--surface);
+    padding:16px 0;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  nav a{
+    display:flex;align-items:center;gap:10px;
+    padding:9px 20px;
+    font-size:13px;font-weight:500;color:var(--muted);
+    text-decoration:none;cursor:pointer;
+    border-left:2px solid transparent;
+    transition:all .15s;
+  }
+  nav a:hover{color:var(--text);background:rgba(255,255,255,.03)}
+  nav a.active{
+    color:var(--accent);border-left-color:var(--accent);
+    background:var(--accent-dim);
+  }
+  nav a svg{flex-shrink:0;opacity:.7}
+  nav a.active svg{opacity:1}
+  .nav-sep{height:1px;background:var(--border);margin:8px 16px}
+
+  main{flex:1;overflow-y:auto;padding:28px 32px}
+  .page{display:none;animation:fadeIn .2s ease}
+  .page.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ── SECTION HEADER ── */
+  .page-title{
+    font-size:20px;font-weight:600;margin-bottom:4px;
+  }
+  .page-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+  /* ── CARDS ── */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px}
+  .card{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;padding:18px 20px;
+  }
+  .card-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+  .card-val{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--accent)}
+
+  /* ── TABLE ── */
+  .table-wrap{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;overflow:hidden;margin-bottom:24px;
+  }
+  .table-toolbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;border-bottom:1px solid var(--border);
+  }
+  .table-toolbar h3{font-size:13px;font-weight:600}
+  table{width:100%;border-collapse:collapse}
+  thead th{
+    font-family:var(--mono);font-size:10px;font-weight:500;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+    text-align:left;padding:10px 18px;
+    background:rgba(255,255,255,.02);border-bottom:1px solid var(--border);
+  }
+  tbody tr{border-bottom:1px solid var(--border);transition:.12s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:rgba(255,255,255,.025)}
+  td{padding:11px 18px;font-size:13px}
+  .badge{
+    display:inline-block;padding:2px 8px;border-radius:4px;
+    font-family:var(--mono);font-size:10px;font-weight:500;
+  }
+  .badge-green{background:rgba(79,255,176,.15);color:var(--accent)}
+  .badge-amber{background:rgba(255,179,64,.15);color:var(--accent-amber)}
+  .badge-red{background:rgba(255,95,109,.15);color:var(--accent-red)}
+
+  /* ── BUTTONS ── */
+  .btn{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;
+    cursor:pointer;border:none;transition:.15s;font-family:var(--sans);
+  }
+  .btn-primary{background:var(--accent);color:#0d0f14}
+  .btn-primary:hover{filter:brightness(1.1)}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+  .btn-ghost:hover{color:var(--text);border-color:var(--border-soft)}
+  .btn-danger{background:rgba(255,95,109,.15);color:var(--accent-red);border:1px solid rgba(255,95,109,.25)}
+  .btn-danger:hover{background:rgba(255,95,109,.25)}
+  .btn-sm{padding:5px 10px;font-size:11px}
+
+  /* ── FORM ── */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .form-group input,.form-group select{
+    background:#0d0f14;border:1px solid var(--border-soft);color:var(--text);
+    padding:9px 12px;border-radius:6px;font-size:13px;font-family:var(--sans);
+    outline:none;transition:.15s;
+  }
+  .form-group input:focus,.form-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  .form-row{display:flex;gap:10px;justify-content:flex-end}
+
+  /* ── MODAL ── */
+  .overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.7);
+    display:flex;align-items:center;justify-content:center;
+    z-index:200;opacity:0;pointer-events:none;transition:.2s;
+  }
+  .overlay.open{opacity:1;pointer-events:all}
+  .modal{
+    background:var(--surface);border:1px solid var(--border-soft);
+    border-radius:12px;padding:28px;width:480px;max-width:95vw;
+    transform:translateY(12px);transition:.2s;
+  }
+  .overlay.open .modal{transform:none}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:6px}
+  .modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+
+  /* ── TOAST ── */
+  #toast{
+    position:fixed;bottom:24px;right:24px;z-index:300;
+    background:var(--surface);border:1px solid var(--border-soft);
+    border-radius:8px;padding:12px 18px;font-size:13px;
+    display:flex;align-items:center;gap:10px;
+    transform:translateY(20px);opacity:0;pointer-events:none;
+    transition:.25s;box-shadow:0 8px 32px rgba(0,0,0,.5);
+  }
+  #toast.show{transform:none;opacity:1}
+  #toast.ok .ti{color:var(--accent)}
+  #toast.err .ti{color:var(--accent-red)}
+
+  /* ── LOADING ── */
+  .loading{
+    display:flex;align-items:center;justify-content:center;
+    padding:40px;color:var(--muted);font-family:var(--mono);font-size:12px;gap:10px;
+  }
+  .spinner{
+    width:16px;height:16px;border:2px solid var(--border-soft);
+    border-top-color:var(--accent);border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── EMPTY ── */
+  .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
+  /* ── BI QUERY ── */
+  .bi-query{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;margin-bottom:16px;overflow:hidden;
+  }
+  .bi-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;cursor:pointer;
+  }
+  .bi-header h3{font-size:13px;font-weight:600}
+  .bi-desc{font-size:12px;color:var(--muted);margin-top:2px}
+  .bi-body{display:none;border-top:1px solid var(--border);padding:16px 18px}
+  .bi-body.open{display:block}
+  .bi-input-row{display:flex;gap:10px;margin-bottom:14px;align-items:flex-end}
+  .bi-input-row .form-group{flex:1}
+  pre.json{
+    background:#0a0c10;border:1px solid var(--border);border-radius:6px;
+    padding:14px;font-family:var(--mono);font-size:11px;
+    color:#a8b2cc;overflow-x:auto;white-space:pre-wrap;
+    max-height:360px;overflow-y:auto;
+  }
+
+  /* ── CHEVRON ── */
+  .chev{transition:.2s;color:var(--muted)}
+  .open-chev .chev{transform:rotate(180deg)}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border-soft);border-radius:3px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MEGA<span>STORE</span> GLOBAL <span>/ admin</span></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="status-dot" id="dot"></span>
+    <span id="status-label">connecting…</span>
+  </div>
+</header>
+
+<div class="shell">
+  <nav>
+    <a class="active" data-page="dashboard" onclick="nav(this)">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </a>
+    <a data-page="products" onclick="nav(this)">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Products
+    </a>
+    <div class="nav-sep"></div>
+    <a data-page="bi" onclick="nav(this)">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Business Intel
+    </a>
+    <a data-page="migration" onclick="nav(this)">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Migration
+    </a>
+  </nav>
+
+  <main>
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub">Live summary from the API</div>
+      <div class="cards" id="dash-cards">
+        <div class="card"><div class="card-label">Products</div><div class="card-val" id="stat-products">—</div></div>
+        <div class="card"><div class="card-label">Suppliers</div><div class="card-val" id="stat-suppliers">—</div></div>
+        <div class="card"><div class="card-label">Categories</div><div class="card-val" id="stat-categories">—</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar"><h3>Recent Products</h3></div>
+        <div id="dash-table"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="page-title">Products</div>
+      <div class="page-sub">Full CRUD — create, edit and delete products</div>
+      <div style="margin-bottom:16px">
+        <button class="btn btn-primary" onclick="openCreate()">
+          <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Product
+        </button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <h3>All Products</h3>
+          <button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button>
+        </div>
+        <div id="products-table"><div class="loading"><div class="spinner"></div>Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- BI -->
+    <div class="page" id="page-bi">
+      <div class="page-title">Business Intelligence</div>
+      <div class="page-sub">Aggregated queries from the operations manager</div>
+
+      <div class="bi-query">
+        <div class="bi-header" onclick="toggleBI(this)">
+          <div>
+            <h3>Supplier Analysis</h3>
+            <div class="bi-desc">Which suppliers sold the most items and inventory value associated</div>
+          </div>
+          <svg class="chev" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="bi-body">
+          <div style="margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="runBI('/bi/suppliers/summary','bi-res-1')">Run Query</button></div>
+          <pre class="json" id="bi-res-1">// press Run Query</pre>
+        </div>
+      </div>
+
+      <div class="bi-query">
+        <div class="bi-header" onclick="toggleBI(this)">
+          <div>
+            <h3>Customer Purchase History</h3>
+            <div class="bi-desc">All orders for a specific customer with products and totals</div>
+          </div>
+          <svg class="chev" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="bi-body">
+          <div class="bi-input-row">
+            <div class="form-group"><label>Customer ID</label><input id="cust-id" type="number" value="1" style="width:120px"/></div>
+            <button class="btn btn-primary btn-sm" onclick="runBI('/bi/customers/'+document.getElementById('cust-id').value+'/purchases','bi-res-2')">Run Query</button>
+          </div>
+          <pre class="json" id="bi-res-2">// enter an ID and press Run Query</pre>
+        </div>
+      </div>
+
+      <div class="bi-query">
+        <div class="bi-header" onclick="toggleBI(this)">
+          <div>
+            <h3>Star Products by Category</h3>
+            <div class="bi-desc">Best-selling products inside a category, ordered by revenue</div>
+          </div>
+          <svg class="chev" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="bi-body">
+          <div class="bi-input-row">
+            <div class="form-group"><label>Category ID</label><input id="cat-id" type="number" value="1" style="width:120px"/></div>
+            <button class="btn btn-primary btn-sm" onclick="runBI('/bi/categories/'+document.getElementById('cat-id').value+'/top-products','bi-res-3')">Run Query</button>
+          </div>
+          <pre class="json" id="bi-res-3">// enter an ID and press Run Query</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIGRATION -->
+    <div class="page" id="page-migration">
+      <div class="page-title">Migration</div>
+      <div class="page-sub">Import raw Excel data into the SQL database — safe to run multiple times</div>
+      <div class="table-wrap" style="max-width:520px">
+        <div style="padding:28px;text-align:center">
+          <div style="font-size:36px;margin-bottom:12px">📊</div>
+          <div style="font-weight:600;margin-bottom:6px">Excel → MySQL import</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:24px;line-height:1.7">
+            Reads <code style="color:var(--accent);font-family:var(--mono)">src/data/raw_data.xlsx</code> and distributes<br/>
+            data into all normalized tables. Idempotent — no duplicates created.
+          </div>
+          <button class="btn btn-primary" id="migrate-btn" onclick="runMigration()">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Run Migration
+          </button>
+          <pre class="json" id="migrate-res" style="margin-top:20px;text-align:left;display:none"></pre>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CREATE / EDIT MODAL -->
+<div class="overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">New Product</div>
+    <div class="modal-sub" id="modal-sub">Fill in the fields below</div>
+    <div class="form-grid">
+      <div class="form-group"><label>SKU</label><input id="f-sku" placeholder="e.g. LPT-HP-001"/></div>
+      <div class="form-group"><label>Unit Price</label><input id="f-price" type="number" placeholder="99000"/></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Product Name</label><input id="f-name" placeholder="Laptop HP Pavilion 15"/></div>
+      <div class="form-group"><label>Category ID</label><input id="f-cat" type="number" placeholder="1"/></div>
+      <div class="form-group"><label>Supplier ID</label><input id="f-sup" type="number" placeholder="1"/></div>
+    </div>
+    <div class="form-row">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modal-save" onclick="saveProduct()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><span class="ti" id="toast-icon">✓</span><span id="toast-msg"></span></div>
+
+<script>
+const API = 'http://localhost:3000/api'
+let editSku = null
+
+// ── helpers ──────────────────────────────────────────────
+async function api(path, opts={}) {
+  const r = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  })
+  const j = await r.json()
+  if (!r.ok) throw new Error(j.message || r.statusText)
+  return j
+}
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast')
+  document.getElementById('toast-msg').textContent = msg
+  document.getElementById('toast-icon').textContent = ok ? '✓' : '✕'
+  t.className = ok ? 'show ok' : 'show err'
+  clearTimeout(t._t)
+  t._t = setTimeout(() => t.className = '', 2800)
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('es-CO').format(n)
+}
+
+// ── connectivity check ────────────────────────────────────
+async function checkStatus() {
+  try {
+    await api('/products')
+    document.getElementById('dot').className = 'status-dot online'
+    document.getElementById('status-label').textContent = 'API online'
+  } catch {
+    document.getElementById('status-label').textContent = 'API offline'
+  }
+}
+
+// ── navigation ────────────────────────────────────────────
+function nav(el) {
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'))
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  el.classList.add('active')
+  document.getElementById('page-' + el.dataset.page).classList.add('active')
+  if (el.dataset.page === 'products') loadProducts()
+  if (el.dataset.page === 'dashboard') loadDashboard()
+}
+
+// ── dashboard ─────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const { data } = await api('/products')
+    document.getElementById('stat-products').textContent = data.length
+
+    const cats = new Set(data.map(p => p.category))
+    const sups = new Set(data.map(p => p.supplier))
+    document.getElementById('stat-categories').textContent = cats.size
+    document.getElementById('stat-suppliers').textContent = sups.size
+
+    renderProductTable('dash-table', data.slice(0, 8), true)
+  } catch(e) {
+    document.getElementById('dash-table').innerHTML = `<div class="empty">Could not reach API — ${e.message}</div>`
+  }
+}
+
+// ── products table ────────────────────────────────────────
+async function loadProducts() {
+  document.getElementById('products-table').innerHTML = '<div class="loading"><div class="spinner"></div>Loading…</div>'
+  try {
+    const { data } = await api('/products')
+    renderProductTable('products-table', data, false)
+  } catch(e) {
+    document.getElementById('products-table').innerHTML = `<div class="empty">${e.message}</div>`
+  }
+}
+
+function renderProductTable(targetId, data, readOnly) {
+  if (!data.length) {
+    document.getElementById(targetId).innerHTML = '<div class="empty">No products found. Run the migration first.</div>'
+    return
+  }
+  const rows = data.map(p => `
+    <tr>
+      <td><span style="font-family:var(--mono);color:var(--accent);font-size:11px">${p.sku}</span></td>
+      <td>${p.name}</td>
+      <td><span class="badge badge-amber">${p.category}</span></td>
+      <td style="color:var(--muted)">${p.supplier}</td>
+      <td style="font-family:var(--mono)">$${fmt(p.unit_price)}</td>
+      ${readOnly ? '' : `<td>
+        <button class="btn btn-ghost btn-sm" onclick="openEdit(${JSON.stringify(p).replace(/"/g,'&quot;')})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="confirmDelete('${p.sku}')">Delete</button>
+      </td>`}
+    </tr>`).join('')
+
+  document.getElementById(targetId).innerHTML = `
+    <table>
+      <thead><tr>
+        <th>SKU</th><th>Name</th><th>Category</th><th>Supplier</th><th>Unit Price</th>
+        ${readOnly ? '' : '<th>Actions</th>'}
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`
+}
+
+// ── product CRUD ──────────────────────────────────────────
+function openCreate() {
+  editSku = null
+  document.getElementById('modal-title').textContent = 'New Product'
+  document.getElementById('modal-sub').textContent = 'Fill in the fields and save'
+  ;['f-sku','f-name','f-price','f-cat','f-sup'].forEach(id => document.getElementById(id).value = '')
+  document.getElementById('f-sku').disabled = false
+  document.getElementById('modal-overlay').classList.add('open')
+}
+
+function openEdit(p) {
+  editSku = p.sku
+  document.getElementById('modal-title').textContent = 'Edit Product'
+  document.getElementById('modal-sub').textContent = `Editing ${p.sku}`
+  document.getElementById('f-sku').value = p.sku
+  document.getElementById('f-sku').disabled = true
+  document.getElementById('f-name').value = p.name
+  document.getElementById('f-price').value = p.unit_price
+  document.getElementById('modal-overlay').classList.add('open')
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open')
+}
+
+async function saveProduct() {
+  const sku   = document.getElementById('f-sku').value.trim()
+  const name  = document.getElementById('f-name').value.trim()
+  const price = parseFloat(document.getElementById('f-price').value)
+  const cat   = parseInt(document.getElementById('f-cat').value)
+  const sup   = parseInt(document.getElementById('f-sup').value)
+
+  if (!name || isNaN(price)) { toast('Name and price are required', false); return }
+
+  try {
+    if (editSku) {
+      await api(`/products/${editSku}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, unit_price: price, category_id: cat, supplier_id: sup })
+      })
+      toast('Product updated')
+    } else {
+      if (!sku) { toast('SKU is required', false); return }
+      await api('/products', {
+        method: 'POST',
+        body: JSON.stringify({ sku, name, unit_price: price, category_id: cat, supplier_id: sup })
+      })
+      toast('Product created')
+    }
+    closeModal()
+    loadProducts()
+  } catch(e) { toast(e.message, false) }
+}
+
+async function confirmDelete(sku) {
+  if (!confirm(`Delete product ${sku}? This will be logged in MongoDB.`)) return
+  try {
+    await api(`/products/${sku}`, { method: 'DELETE' })
+    toast(`${sku} deleted — audit log saved`)
+    loadProducts()
+  } catch(e) { toast(e.message, false) }
+}
+
+// ── BI ────────────────────────────────────────────────────
+function toggleBI(header) {
+  const body = header.nextElementSibling
+  const isOpen = body.classList.contains('open')
+  body.classList.toggle('open', !isOpen)
+  header.classList.toggle('open-chev', !isOpen)
+}
+
+async function runBI(path, resultId) {
+  const el = document.getElementById(resultId)
+  el.textContent = '// loading…'
+  try {
+    const data = await api(path)
+    el.textContent = JSON.stringify(data, null, 2)
+  } catch(e) {
+    el.textContent = '// Error: ' + e.message
+  }
+}
+
+// ── migration ─────────────────────────────────────────────
+async function runMigration() {
+  const btn = document.getElementById('migrate-btn')
+  const res = document.getElementById('migrate-res')
+  btn.disabled = true
+  btn.innerHTML = '<div class="spinner"></div> Importing…'
+  res.style.display = 'none'
+  try {
+    const data = await api('/migration/import', { method: 'POST' })
+    res.textContent = JSON.stringify(data, null, 2)
+    res.style.display = 'block'
+    toast('Migration completed successfully')
+    loadDashboard()
+  } catch(e) {
+    res.textContent = '// Error: ' + e.message
+    res.style.display = 'block'
+    toast(e.message, false)
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = `<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Run Migration`
+  }
+}
+
+// ── init ──────────────────────────────────────────────────
+checkStatus()
+loadDashboard()
+</script>
+</body>
+</html>

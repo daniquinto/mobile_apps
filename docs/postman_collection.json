@@ -1,0 +1,106 @@
+{
+  "info": {
+    "name": "MegaStore Global API",
+    "_postman_id": "megastore-global-v1",
+    "description": "All endpoints. Base URL: http://localhost:3000",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health check — GET /api",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "http://localhost:3000/api", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api"] }
+      }
+    },
+    {
+      "name": "Migration",
+      "item": [
+        {
+          "name": "POST /api/migration/import",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "http://localhost:3000/api/migration/import", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","migration","import"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /api/products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/api/products", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","products"] }
+          }
+        },
+        {
+          "name": "GET /api/products/:sku",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/api/products/LPT-HP-001", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","products","LPT-HP-001"] }
+          }
+        },
+        {
+          "name": "POST /api/products",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"TST-001\",\n  \"name\": \"Test Product\",\n  \"unit_price\": 99000,\n  \"category_id\": 1,\n  \"supplier_id\": 1\n}"
+            },
+            "url": { "raw": "http://localhost:3000/api/products", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","products"] }
+          }
+        },
+        {
+          "name": "PUT /api/products/:sku",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Product\",\n  \"unit_price\": 109000,\n  \"category_id\": 1,\n  \"supplier_id\": 1\n}"
+            },
+            "url": { "raw": "http://localhost:3000/api/products/TST-001", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","products","TST-001"] }
+          }
+        },
+        {
+          "name": "DELETE /api/products/:sku",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "http://localhost:3000/api/products/TST-001", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","products","TST-001"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Business Intelligence",
+      "item": [
+        {
+          "name": "GET /api/bi/suppliers/summary",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/api/bi/suppliers/summary", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","bi","suppliers","summary"] }
+          }
+        },
+        {
+          "name": "GET /api/bi/customers/1/purchases",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/api/bi/customers/1/purchases", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","bi","customers","1","purchases"] }
+          }
+        },
+        {
+          "name": "GET /api/bi/categories/1/top-products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://localhost:3000/api/bi/categories/1/top-products", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api","bi","categories","1","top-products"] }
+          }
+        }
+      ]
+    }
+  ]
+}
